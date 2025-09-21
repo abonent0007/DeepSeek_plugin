@@ -4,15 +4,24 @@
 <img width="540" height="313" alt="deepseek_token_indicator" src="https://github.com/user-attachments/assets/88de4ea0-8848-4c7b-a785-20ba5ec6e72c" />
 <br>
 Создайте папку на компьютере, например, deepseek_token_indicator.
-Поместите все файлы
+Поместите файлы: <br>
+`contentScript.js
+Update contentScript.js
+icon128.png
+icon16.png
+icon48.png
+manifest.json
+Update manifest.json
+popup.html
+popup.js`
 
-Откройте chrome://extensions/
+Откройте `chrome://extensions/`
 
 Включите "Режим разработчика" (переключатель в правом верхнем углу)
 
 Нажмите "Загрузить распакованное расширение"
 
-Выберите папку deepseek_token_indicator, которую вы создали.
+Выберите папку `deepseek_token_indicator`, которую вы создали.
 
 Как это работает:
 Расширение будет активно только на сайте chat.deepseek.com.
