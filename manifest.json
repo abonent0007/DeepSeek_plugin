@@ -1,17 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "DeepSeek Token Indicator",
-  "version": "1.0",
-  "description": "Отображает индикатор оставшихся токенов в сессии DeepSeek Chat.",
-  "permissions": ["activeTab", "scripting"],
+  "name": "DeepSeek Token Indicator + Calibrator",
+  "version": "1.1",
+  "description": "Индикатор токенов для DeepSeek Chat с коррекцией",
+  "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["https://chat.deepseek.com/*"],
   "action": {
     "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
+    "default_title": "Настройка индикатора токенов"
   },
   "content_scripts": [
     {
