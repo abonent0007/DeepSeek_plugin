@@ -1,76 +1,101 @@
 // contentScript.js
-(function () {
-  'use strict';
-  
-  // Настройки (предполагаем, что максимальный контекст ~128k токенов)
-  const MAX_TOKENS = 128000;
-  // Коэффициент приблизительного перевода символов в токены (для русского/английского ~1 токен = 4 символа)
-  const CHARS_PER_TOKEN = 4;
-  
-  // Функция для создания и обновления индикатора
-  function updateTokenIndicator() {
-    // Находим все элементы с сообщениями (селектор может потребовать уточнения)
-    const messageElements = document.querySelectorAll('.message');
-    // Ищем именно наш индикатор на странице
-    let indicator = document.getElementById('deepseek-token-indicator');
+(function() {
+    'use strict';
     
-    // Если индикатора еще нет, создаем его
-    if (!indicator) {
-      indicator = document.createElement('div');
-      indicator.id = 'deepseek-token-indicator';
-      indicator.style.position = 'fixed';
-      indicator.style.top = '10px';
-      indicator.style.right = '10px';
-      indicator.style.zIndex = '10000';
-      indicator.style.padding = '8px 12px';
-      indicator.style.backgroundColor = '#333';
-      indicator.style.color = 'white';
-      indicator.style.borderRadius = '8px';
-      indicator.style.fontSize = '12px';
-      indicator.style.fontWeight = 'bold';
-      document.body.appendChild(indicator);
-    }
-    
-    // Считаем общее количество символов во всех сообщениях
-    let totalChars = 0;
-    messageElements.forEach(el => {
-      totalChars += el.textContent.length;
+    const MAX_TOKENS = 128000;
+    const CHARS_PER_TOKEN = 4;
+    let lastCharCount = 0;
+    let correctionFactor = 1;
+
+    // Загружаем коэффициент коррекции из хранилища
+    chrome.storage.local.get(['correctionFactor'], function(result) {
+        if (result.correctionFactor) {
+            correctionFactor = result.correctionFactor;
+            console.log('Загружен коэффициент коррекции:', correctionFactor);
+        }
     });
-    
-    // Переводим символы в приблизительное количество токенов
-    const usedTokens = Math.round(totalChars / CHARS_PER_TOKEN);
-    const remainingTokens = MAX_TOKENS - usedTokens;
-    const percentage = (remainingTokens / MAX_TOKENS) * 100;
-    
-    // Определяем цвет полоски
-    let color;
-    if (percentage > 50) {
-      color = '#4CAF50'; // Зеленый
-    } else if (percentage > 20) {
-      color = '#FF9800'; // Оранжевый
-    } else {
-      color = '#F44336'; // Красный
+
+    // Функция обновления индикатора
+    function updateTokenIndicator() {
+        const chatContainer = document.querySelector('[class*="chat"]') || document.body;
+        const textNodes = chatContainer.querySelectorAll('p, div, span');
+        let totalChars = 0;
+        
+        textNodes.forEach(node => {
+            if (node.offsetParent !== null && node.textContent.length > 5) {
+                totalChars += node.textContent.length;
+            }
+        });
+        
+        if (Math.abs(totalChars - lastCharCount) < 1000) return;
+        lastCharCount = totalChars;
+        
+        // Применяем коэффициент коррекции
+        const correctedChars = totalChars * correctionFactor;
+        const usedTokens = Math.round(correctedChars / CHARS_PER_TOKEN);
+        const remainingTokens = Math.max(0, MAX_TOKENS - usedTokens);
+        const percentage = (remainingTokens / MAX_TOKENS) * 100;
+        
+        let color = '#4CAF50';
+        if (percentage < 20) color = '#F44336';
+        else if (percentage < 50) color = '#FF9800';
+        
+        let indicator = document.getElementById('deepseek-token-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'deepseek-token-indicator';
+            indicator.style.cssText = `
+                position: fixed; top: 10px; right: 10px; z-index: 10000;
+                padding: 8px 12px; background: #333; color: white;
+                border-radius: 8px; font-size: 12px; font-weight: bold;
+                border: 1px solid #666; cursor: pointer;
+            `;
+            indicator.title = "Кликните для деталей";
+            indicator.addEventListener('click', showTokenDetails);
+            document.body.appendChild(indicator);
+        }
+        
+        indicator.innerHTML = `
+            <div style="margin-bottom: 4px;">Токены: ${remainingTokens}/${MAX_TOKENS}</div>
+            <div style="width: 100px; height: 8px; background: #555; border-radius: 4px;">
+                <div style="width: ${percentage}%; height: 100%; background: ${color};"></div>
+            </div>
+        `;
     }
-    
-    // Обновляем текст и цвет индикатора
-    indicator.innerHTML = `
-      <div style="margin-bottom: 4px;">Токены: ${remainingTokens.toLocaleString()} / ${MAX_TOKENS.toLocaleString()}</div>
-      <div style="width: 100px; height: 8px; background: #555; border-radius: 4px; overflow: hidden;">
-        <div style="width: ${percentage}%; height: 100%; background: ${color}; transition: width 0.3s;"></div>
-      </div>
-    `;
-  }
-  
-  // Создаем наблюдатель за изменениями DOM, чтобы обновлять индикатор при новых сообщениях
-  const observer = new MutationObserver(updateTokenIndicator);
-  
-  // Запускаем наблюдение за всем документом с дочерними элементами и изменениями текста
-  observer.observe(document.body, { 
-    childList: true, 
-    subtree: true,
-    characterData: true 
-  });
-  
-  // Первоначальное создание индикатора
-  updateTokenIndicator();
+
+    // Показ деталей по клику
+    function showTokenDetails() {
+        alert(`Коэффициент коррекции: ${correctionFactor.toFixed(2)}\nСимволов: ${lastCharCount}`);
+    }
+
+    // Обработчик сообщений от popup
+    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        if (request.action === "calibrate") {
+            // Рассчитываем новый коэффициент коррекции
+            const actualTokens = MAX_TOKENS; // Фактический лимит
+            const estimatedTokens = Math.round(lastCharCount / CHARS_PER_TOKEN);
+            correctionFactor = actualTokens / estimatedTokens;
+            
+            // Сохраняем в хранилище
+            chrome.storage.local.set({correctionFactor: correctionFactor});
+            
+            alert(`Калибровка завершена!\nНовый коэффициент: ${correctionFactor.toFixed(2)}`);
+            updateTokenIndicator();
+        }
+    });
+
+    // Инициализация
+    setTimeout(() => {
+        updateTokenIndicator();
+        const observer = new MutationObserver(() => {
+            setTimeout(updateTokenIndicator, 500);
+        });
+        
+        const chatContainer = document.querySelector('[class*="chat"]') || document.body;
+        observer.observe(chatContainer, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }, 2000);
 })();
