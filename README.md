@@ -5,15 +5,16 @@
 <br>
 Создайте папку на компьютере, например, deepseek_token_indicator.
 Поместите файлы:
-``` contentScript.js
-Update contentScript.js
-icon128.png
-icon16.png
-icon48.png
-manifest.json
-Update manifest.json
-popup.html
-popup.js ```
+
+`contentScript.js`
+`icon128.png`
+`icon16.png`
+`icon48.png`
+`manifest.json`
+`Update manifest.json`
+`popup.html`
+`popup.js`
+
 
 Откройте `chrome://extensions/`
 
