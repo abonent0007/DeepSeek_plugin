@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { width: 300px; padding: 15px; font-family: Arial, sans-serif; }
+        .section { margin-bottom: 15px; }
+        button { 
+            width: 100%; padding: 8px; 
+            background: #4CAF50; color: white;
+            border: none; border-radius: 4px; cursor: pointer;
+        }
+        button:hover { background: #45a049; }
+        .calibration { background: #ff9800; }
+        .calibration:hover { background: #e68900; }
+        .reset { background: #f44336; }
+        .reset:hover { background: #da190b; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h3>Калибровка токенов</h3>
+        <p>Нажмите когда сессия закончится:</p>
+        <button id="calibrate" class="calibration">Сессия завершена</button>
+    </div>
+
+    <div class="section">
+        <button id="reset">Сбросить настройки</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
