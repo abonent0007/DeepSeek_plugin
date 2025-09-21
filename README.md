@@ -2,9 +2,9 @@
 # DeepSeek_plugin
 <H1>Плагин для отслеживания остатков токенов в сессии одного чата.</H1>
 <img width="540" height="313" alt="deepseek_token_indicator" src="https://github.com/user-attachments/assets/88de4ea0-8848-4c7b-a785-20ba5ec6e72c" />
-
+<br>
 Создайте папку на компьютере, например, deepseek_token_indicator.
-Поместите туда два файла все файлы
+Поместите туда два все файлы
 
 Откройте chrome://extensions/
 
